@@ -1,8 +1,11 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.requests import Request
 import yfinance as yf
 import pandas as pd
 import time
+import traceback
 
 app = FastAPI(title="BIST Hisse Tahmin API")
 
@@ -12,6 +15,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def all_exceptions_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc), "trace": traceback.format_exc()[-1500:]},
+        headers={"Access-Control-Allow-Origin": "*"},
+    )
+
 
 BIST_STOCKS = [
     "THYAO", "ASELS", "GARAN", "AKBNK", "ISCTR",
@@ -119,6 +132,11 @@ def predict(
     full_ticker = f"{clean_ticker}.IS"
 
     df = get_data(full_ticker, timeframe)
+    df = df.dropna(subset=["Close"])
+
+    if df.empty or len(df) < 30:
+        raise HTTPException(status_code=400, detail="Bu hisse icin yeterli veri yok")
+
     feat_df = compute_features(df)
     pred, prob = train_and_predict(feat_df)
 
@@ -138,6 +156,6 @@ def predict(
         "probability": round(prob * 100, 1),
         "chart": {
             "labels": chart_df[time_col].astype(str).tolist(),
-            "prices": [round(float(p), 2) for p in chart_df["Close"].tolist()],
+            "prices": [round(float(p), 2) if pd.notna(p) else None for p in chart_df["Close"].tolist()],
         },
     }
