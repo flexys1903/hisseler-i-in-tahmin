@@ -1,12 +1,3 @@
-"""
-BIST Hisse Tahmin API
-----------------------
-1) yfinance ile BIST hisselerinin fiyat verisini ceker
-2) RSI, MACD, SMA teknik indikatorlerini hesaplar
-3) RandomForest modeli ile "sonraki periyotta fiyat yukselir mi duser mi" tahmini yapar
-4) Sonucu ve grafik verisini JSON olarak doner
-"""
-
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
@@ -15,7 +6,6 @@ import time
 
 app = FastAPI(title="BIST Hisse Tahmin API")
 
-# Frontend farkli bir domainde (GitHub Pages) calisacagi icin CORS aciyoruz
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -38,7 +28,7 @@ TIMEFRAME_MAP = {
 }
 
 _cache = {}
-CACHE_TTL = 60  # saniye
+CACHE_TTL = 60
 
 
 def get_data(ticker: str, timeframe: str) -> pd.DataFrame:
@@ -57,7 +47,7 @@ def get_data(ticker: str, timeframe: str) -> pd.DataFrame:
         df.columns = df.columns.get_level_values(0)
 
     if df.empty:
-        raise HTTPException(status_code=404, detail="Veri bulunamadi (hisse kodunu kontrol et)")
+        raise HTTPException(status_code=404, detail="Veri bulunamadi")
 
     _cache[key] = {"ts": now, "data": df}
     return df
@@ -96,11 +86,14 @@ def train_and_predict(df: pd.DataFrame):
     y_train = df["Target"].iloc[:-1]
     X_last = df[features].iloc[[-1]]
 
+    if y_train.nunique() < 2:
+        return int(y_train.iloc[0]), 0.55
+
     model = RandomForestClassifier(n_estimators=150, max_depth=6, random_state=42)
     model.fit(X_train, y_train)
 
     pred = int(model.predict(X_last)[0])
-    prob = float(model.predict_proba(X_last)[0][pred])
+    prob = float(model.predict_proba(X_last)[0].max())
     return pred, prob
 
 
@@ -116,11 +109,11 @@ def stocks():
 
 @app.get("/predict")
 def predict(
-    ticker: str = Query(..., description="Orn: THYAO"),
-    timeframe: str = Query(..., description="5m, 1h, 1d, 1mo"),
+    ticker: str = Query(...),
+    timeframe: str = Query(...),
 ):
     if timeframe not in TIMEFRAME_MAP:
-        raise HTTPException(status_code=400, detail="Gecersiz zaman dilimi. Kullan: 5m, 1h, 1d, 1mo")
+        raise HTTPException(status_code=400, detail="Gecersiz zaman dilimi")
 
     clean_ticker = ticker.upper().replace(".IS", "")
     full_ticker = f"{clean_ticker}.IS"
