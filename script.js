@@ -1,5 +1,5 @@
 // Backend'ini Render'a deploy ettikten sonra buradaki URL'yi değiştir
-const API_URL = "https://SENIN-BACKEND-ADRESIN.onrender.com";
+const API_URL = "https://bist-tahmin-api.onrender.com";
 
 const timeframe = document.body.dataset.timeframe; // her sayfada farklı: 5m, 1h, 1d, 1mo
 const stockSelect = document.getElementById("stockSelect");
