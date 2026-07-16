@@ -37,11 +37,11 @@ async def all_exceptions_handler(request: Request, exc: Exception):
     )
 
 
-# Sadece istenen hisseler
+# Güncellenmiş Hisse Listesi (Hatalı YUPRS kodu TUPRS olarak düzeltilmiştir)
 BIST_STOCKS = [
     "AFYON", "AKSA", "ANHYT", "ANSGR", "BRYAT", "CLEBI", "DOAS", "EGPRO",
     "ENKAI", "FROTO", "GARAN", "GEDIK", "ISCTR", "ISDMR", "ISMEN", "LOGO",
-    "MAVI", "NTGAZ", "NUHCM", "TOASO", "TSKB", "YUPRS", "ULUFA", "VAKKO",
+    "MAVI", "NTGAZ", "NUHCM", "TOASO", "TSKB", "TUPRS", "ULUFA", "VAKKO",
 ]
 
 # Zaman dilimleri: 1 dakika, 5 dakika, 15 dakika, saatlik
