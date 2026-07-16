@@ -1,3 +1,14 @@
+"""
+BIST Hisse Tahmin API
+----------------------
+1) yfinance ile BIST hisselerinin fiyat verisini ceker
+2) RSI, MACD, SMA teknik indikatorlerini hesaplar
+3) RandomForest modeli ile "sonraki periyotta fiyat yukselir mi duser mi" tahmini yapar
+4) Sonucu ve grafik verisini JSON olarak doner
+
+Zaman dilimleri: 1 dakika, 5 dakika, 15 dakika, saatlik
+"""
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -26,22 +37,23 @@ async def all_exceptions_handler(request: Request, exc: Exception):
     )
 
 
+# Sadece istenen hisseler
 BIST_STOCKS = [
-    "THYAO", "ASELS", "GARAN", "AKBNK", "ISCTR",
-    "KCHOL", "SAHOL", "SISE", "EREGL", "BIMAS",
-    "TUPRS", "PETKM", "FROTO", "TOASO", "PGSUS",
-    "YKBNK", "VAKBN", "HALKB", "ARCLK", "TCELL",
+    "AFYON", "AKSA", "ANHYT", "ANSGR", "BRYAT", "CLEBI", "DOAS", "EGPRO",
+    "ENKAI", "FROTO", "GARAN", "GEDIK", "ISCTR", "ISDMR", "ISMEN", "LOGO",
+    "MAVI", "NTGAZ", "NUHCM", "TOASO", "TSKB", "YUPRS", "ULUFA", "VAKKO",
 ]
 
+# Zaman dilimleri: 1 dakika, 5 dakika, 15 dakika, saatlik
 TIMEFRAME_MAP = {
+    "1m":  {"interval": "1m",  "period": "5d"},
     "5m":  {"interval": "5m",  "period": "5d"},
-    "1h":  {"interval": "1h",  "period": "1mo"},
-    "1d":  {"interval": "1d",  "period": "1y"},
-    "1mo": {"interval": "1mo", "period": "5y"},
+    "15m": {"interval": "15m", "period": "1mo"},
+    "1h":  {"interval": "60m", "period": "3mo"},
 }
 
 _cache = {}
-CACHE_TTL = 60
+CACHE_TTL = 60  # saniye
 
 
 def get_data(ticker: str, timeframe: str) -> pd.DataFrame:
@@ -126,9 +138,12 @@ def predict(
     timeframe: str = Query(...),
 ):
     if timeframe not in TIMEFRAME_MAP:
-        raise HTTPException(status_code=400, detail="Gecersiz zaman dilimi")
+        raise HTTPException(status_code=400, detail="Gecersiz zaman dilimi. Kullan: 1m, 5m, 15m, 1h")
 
     clean_ticker = ticker.upper().replace(".IS", "")
+    if clean_ticker not in BIST_STOCKS:
+        raise HTTPException(status_code=400, detail="Bu hisse listede yok")
+
     full_ticker = f"{clean_ticker}.IS"
 
     df = get_data(full_ticker, timeframe)
