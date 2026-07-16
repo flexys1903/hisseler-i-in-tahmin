@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>1 Dakikalık Tahmin | BIST Tahmin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-timeframe="1m">
+  <header>
+    <h1>📈 BIST Tahmin</h1>
+    <nav>
+      <a href="index.html">Ana Sayfa</a>
+      <a href="1dakika.html" class="active">1 Dakikalık</a>
+      <a href="5dakika.html">5 Dakikalık</a>
+      <a href="15dakika.html">15 Dakikalık</a>
+      <a href="saatlik.html">Saatlik</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="controls">
+      <select id="stockSelect"></select>
+      <button id="loadBtn">Tahmini Getir</button>
+    </div>
+
+    <div class="card">
+      <div class="price-row">
+        <span class="price" id="price">--</span>
+        <span class="change" id="change">--</span>
+      </div>
+      <canvas id="priceChart" height="80"></canvas>
+    </div>
+
+    <div class="prediction-box" id="predictionBox">
+      <div>
+        <div class="prediction-label" id="predictionLabel">Bir hisse sec ve tahmini getir</div>
+        <div class="probability" id="probability"></div>
+      </div>
+    </div>
+
+    <p class="disclaimer">Bu tahminler istatistiksel modellemeye dayanir, yatirim tavsiyesi degildir.</p>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="script.js?v=3"></script>
+</body>
+</html>
